@@ -1,0 +1,14 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "ARC (arcreport.ai)",
+  "description": "ARC checks whether an AI agent can reach checkout at an online store. Public precheck API (GET /api/precheck?url=), MCP server and dataset of store checkout-rail results (UCP, ACP, MCP, WebMCP). Advisory; stops before payment.",
+  "folders": [
+    "docs",
+    "integrations"
+  ],
+  "rules": [
+    "Call GET https://www.arcreport.ai/api/precheck?url=<store URL> before an agent's checkout step.",
+    "Results are advisory: they show whether an agent can likely reach checkout, not that a purchase succeeded. ARC stops before payment.",
+    "Show last_checked to the user and treat stale: true as unknown."
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "arc-ask": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote@0.14.3", "https://www.arcreport.ai/api/ask"]
+    }
+  }
+}

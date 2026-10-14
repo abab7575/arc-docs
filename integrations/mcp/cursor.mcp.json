@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "arc-ask": {
+      "url": "https://www.arcreport.ai/api/ask"
+    }
+  }
+}

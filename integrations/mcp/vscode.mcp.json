@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "arc-ask": {
+      "type": "http",
+      "url": "https://www.arcreport.ai/api/ask"
+    }
+  }
+}
