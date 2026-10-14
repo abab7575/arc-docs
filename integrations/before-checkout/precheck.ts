@@ -8,6 +8,8 @@
 
 import { pathToFileURL } from "node:url";
 
+// On any error or timeout, treat the store as unknown, not as no.
+
 // Set PRECHECK_USER_AGENT to the name of your agent. The fallback is a placeholder.
 export const USER_AGENT = process.env.PRECHECK_USER_AGENT ?? "my-agent/1.0 (+https://example.com/contact)";
 const DEFAULT_ENDPOINT = "https://www.arcreport.ai/api/precheck";
@@ -62,9 +64,11 @@ export async function fetchPrecheck(url: string): Promise<PrecheckBody> {
   const saved = cache.get(host);
   // One saved answer per host for 24 hours. The limit is 60 requests a minute.
   if (saved && Date.now() - saved.at < DAY_MS) return saved.body;
-  const target = endpoint() + "?url=" + encodeURIComponent(url);
+  // Send the store origin only (scheme and host), not the full product URL.
+  const target = endpoint() + "?url=" + encodeURIComponent(new URL(url).origin);
   const res = await fetch(target, {
     headers: { "user-agent": USER_AGENT, accept: "application/json" },
+    signal: AbortSignal.timeout(10000),
   });
   if (res.status === 429) {
     // Respect Retry-After. Do not retry in a loop.

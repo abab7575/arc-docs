@@ -7,6 +7,8 @@ does not call a model.
 
 from __future__ import annotations
 
+# On any error or timeout, treat the store as unknown, not as no.
+
 import json
 import math
 import os
@@ -67,7 +69,10 @@ def fetch_precheck(url: str) -> dict:
     # One saved answer per host for 24 hours. The limit is 60 requests a minute.
     if saved and time.time() - saved[0] < DAY_S:
         return saved[1]
-    target = endpoint() + "?" + urllib.parse.urlencode({"url": url})
+    # Send the store origin only (scheme and host), not the full product URL.
+    parsed = urllib.parse.urlparse(url if "://" in url else "https://" + url)
+    origin = parsed.scheme + "://" + parsed.netloc
+    target = endpoint() + "?" + urllib.parse.urlencode({"url": origin})
     request = urllib.request.Request(
         target,
         headers={"User-Agent": USER_AGENT, "Accept": "application/json"},

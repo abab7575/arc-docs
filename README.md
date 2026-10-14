@@ -25,7 +25,7 @@ curl "https://www.arcreport.ai/api/precheck?url=https://allbirds.com"
 
 ## Licence
 
-The docs in this repo and the precheck data are licensed CC BY 4.0. Please credit "ARC (arcreport.ai)".
+Code (integrations/) is MIT. Docs and precheck data are CC BY 4.0; credit "ARC (arcreport.ai)".
 
 ## Contact
 

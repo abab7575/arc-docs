@@ -2,7 +2,7 @@
 
 Ask whether ARC already knows if an agent can **reach checkout** at a store. The answer is built from saved checks. ARC does not fetch that URL and does not start a scan.
 
-Results are advisory; ARC stops before payment. A detected rail does not prove an agent completed checkout. `reachable_checkout` is true only when a saved check returned a checkout link. The saved result is ARC's automated check, not a live agent purchase or session.
+Results are advisory; ARC stops before payment. A detected rail does not prove an agent completed checkout. `reachable_checkout` is true only when a saved check returned a checkout link. The saved result is ARC's automated check, not a live agent checkout or session.
 
 Live version: https://www.arcreport.ai/docs/precheck
 
@@ -14,10 +14,12 @@ GET https://www.arcreport.ai/api/precheck?url=<product or store URL>
 
 - `http` and `https` URLs only. Pass a full URL such as `https://allbirds.com`; a bare hostname returns `{"error": "Pass an http(s) product or store URL."}`.
 - No API key.
+- Send the store origin (scheme and host) where you can; the read is per host.
+- Optional: `ref` (query) and `X-ARC-Client` (header) are optional. Each is a fixed label that identifies the integration, not the user; never put a user or session ID in them. Unknown labels are stored as `other`, and these labels are deleted after 30 days.
 - The same read is the `precheck` tool on the MCP endpoint `https://www.arcreport.ai/api/ask`. (`https://www.arcreport.ai/api/mcp` does not serve this tool.)
 
 ```sh
-curl -sD - "https://www.arcreport.ai/api/precheck?url=https://allbirds.com/products/shoe"
+curl -sD - "https://www.arcreport.ai/api/precheck?url=https://allbirds.com"
 ```
 
 ## Response fields
@@ -27,12 +29,12 @@ curl -sD - "https://www.arcreport.ai/api/precheck?url=https://allbirds.com/produ
 | `host` | Hostname, lowercased, without a leading `www` or trailing dot. A subdomain can resolve to the registrable host ARC already lists (e.g. `shop.example.co.uk` → `example.co.uk`). |
 | `last_checked` | ISO time of the saved check. `null` when there is none. |
 | `checked_ago` | Coarse age of `last_checked`, e.g. "3 hours ago". "never checked" when the time is missing or unparseable. |
-| `stale` | `true` when `last_checked` is 24 hours old or older, or missing. `false` only when the saved check is newer than 24 hours. Always present. Treat `stale: true` as unknown. |
+| `stale` | Stale results may be out of date. `true` when `last_checked` is 24 hours old or older, or missing. `false` only when the saved check is newer than 24 hours. Always present. Treat `stale: true` as unknown. |
 | `known` | `true` when ARC's public catalog, a saved rails check, or directory check history has this host. `false` for a host ARC has not published (including stores that opted out). |
 | `reachable_checkout` | `true` when a saved check returned a checkout link, `false` when that check finished without one, `null` when ARC has no completed check. |
 | `rails` | Array of `{name, status, proves}` for UCP, ACP, Shop Pay, WebMCP and MCP. `Checkout WebMCP` is included when a saved Shopify reading exists. `null` when `known` is false. |
 | `rails[].proves` | A sentence describing what that saved status records. Every one includes "Does not prove an agent completed checkout." |
-| `blockers` | Standard sentences for a saved block. Empty when nothing blocked the check. `null` when `known` is false. |
+| `blockers` | Standard sentences for a saved block. Blockers are what ARC saw in this check; a store may change at any time. Empty when nothing blocked the check. `null` when `known` is false. |
 | `confidence` | `high` (completed check in the last 7 days), `medium` (last 30 days), `low` (older or failed evidence), `none` (no evidence). |
 | `report_outcome` | `https://www.arcreport.ai/docs/outcome-report`: where to report one checkout attempt. |
 | `source` | `ARC (arcreport.ai)` |
@@ -40,6 +42,8 @@ curl -sD - "https://www.arcreport.ai/api/precheck?url=https://allbirds.com/produ
 | `scan_url` | Link to the free scan page when the host is unknown. `null` when `known` is true. Opening this API does not run the scan. |
 | `lastReachableCheck` | Optional. A separate, newer plain-HTTP check: `{checkedAt, proves, evidenceLevel: "http-only"}`. It does not re-verify the checkout link or rails. Absent when there is no such check. |
 | `reachability_stale` | Optional. `true` when `lastReachableCheck` is 24 hours old or older, or its time is missing. Absent when `lastReachableCheck` is absent. Does not change `stale`. |
+
+A null or missing field means ARC doesn't know; it is never a no. On any error or timeout, treat the store as unknown, not as no.
 
 ## Example response
 
@@ -86,7 +90,7 @@ Successful responses send `Cache-Control: public, s-maxage=300, stale-while-reva
 
 ## Privacy
 
-A successful answer increments a daily total for that host. The raw client address and user agent are not stored.
+A successful answer increments a daily total for that host. The raw client address and user agent are not stored. `ref` (query) and `X-ARC-Client` (header) are optional. Each is a fixed label that identifies the integration, not the user; never put a user or session ID in them. Unknown labels are stored as `other`, and these labels are deleted after 30 days.
 
 ## Licence
 
